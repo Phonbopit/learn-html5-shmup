@@ -14,6 +14,8 @@ BasicGame.Game.prototype = {
 
     this.sea = this.add.tileSprite(0, 0, 1024, 768, 'sea');
 
+    this.bullet = this.add.sprite(512, 400, 'bullet');
+
   },
 
   update: function () {
