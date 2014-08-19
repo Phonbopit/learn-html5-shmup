@@ -41,27 +41,34 @@ BasicGame.Game.prototype = {
     this.enemy.anchor.setTo(0.5, 0.5);
     this.physics.enable(this.enemy, Phaser.Physics.ARCADE);
 
-    this.bullet = this.add.sprite(512, 400, 'bullet');
-    this.bullet.anchor.setTo(0.5, 0.5);
-
-    //Apply Phisics
-    this.physics.enable(this.bullet, Phaser.Physics.ARCADE);
-    this.bullet.body.velocity.y = -200;
+    this.bullets = [];
+    this.nextShotAt = 0;
+    this.shotDelay = 200;
 
     this.cursors = this.input.keyboard.createCursorKeys();
+
+    this.instructions = this.add.text(510, 600,
+      'Use Arrow Keys to Move, Press Z to Fire\n' + 
+      'Tapping/clicking does both', {
+        font: '20px monospace', fill: '#fff', align: 'center'
+      });
+    this.instructions.anchor.setTo(0.5, 0.5);
+    this.instExpire = this.time.now + 10000;
   },
 
   update: function () {
     this.sea.tilePosition.y += 0.2;
-    this.physics.arcade.overlap(
-      this.bullet,
-      this.enemy,
-      this.enemyHit,
-      null,
-      this
-    );
 
-    
+    for (var i = 0; i < this.bullets.length; i++) {
+      this.physics.arcade.overlap(
+        this.bullets[i],
+        this.enemy,
+        this.enemyHit,
+        null,
+        this
+      );
+    }
+
     this.player.body.velocity.x = 0;
     this.player.body.velocity.y = 0;
 
@@ -86,11 +93,38 @@ BasicGame.Game.prototype = {
       this.physics.arcade.moveToPointer(this.player, this.player.speed);
     }
 
+    if (this.input.keyboard.isDown(Phaser.Keyboard.Z) ||
+        this.input.activePointer.isDown) {
+      this.fire();
+    }
+
+    if (this.instructions.exists && this.time.now > this.instExpire) {
+      this.instructions.destroy();
+    }
+
   },
 
   render: function() {
 /*    this.game.debug.body(this.bullet);
     this.game.debug.body(this.enemy);*/
+  },
+
+  fire: function() {
+    if (this.nextShotAt > this.time.now) {
+      return;
+    }
+
+    this.nextShotAt = this.time.now + this.shotDelay;
+
+    var bullet  = this.add.sprite(this.player.x, this.player.y - 16, 'bullet');
+    bullet.anchor.setTo(0.5, 0.5);
+
+    //Apply Phisics
+    this.physics.enable(bullet, Phaser.Physics.ARCADE);
+    bullet.body.velocity.y = -200;
+
+    // Add bullet to bullets list
+    this.bullets.push(bullet);
   },
 
   enemyHit: function(bullet, enemy) {
