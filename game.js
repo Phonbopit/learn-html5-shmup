@@ -23,14 +23,35 @@ BasicGame.Game.prototype = {
     this.enemy.play('fly');
     // Set default anchor to center the sprites.
     this.enemy.anchor.setTo(0.5, 0.5);
+    this.physics.enable(this.enemy, Phaser.Physics.ARCADE);
 
     this.bullet = this.add.sprite(512, 400, 'bullet');
     this.bullet.anchor.setTo(0.5, 0.5);
+
+    //Apply Phisics
+    this.physics.enable(this.bullet, Phaser.Physics.ARCADE);
+    this.bullet.body.velocity.y = -400;
   },
 
   update: function () {
-     this.sea.tilePosition.y += 0.2;
-     this.bullet.y -= 1;
+    this.sea.tilePosition.y += 0.2;
+    this.physics.arcade.overlap(
+      this.bullet,
+      this.enemy,
+      this.enemyHit,
+      null,
+      this
+    );
+  },
+
+  render: function() {
+    this.game.debug.body(this.bullet);
+    this.game.debug.body(this.enemy);
+  },
+
+  enemyHit: function(bullet, enemy) {
+    bullet.kill();
+    enemy.kill();
   },
 
   quitGame: function (pointer) {
