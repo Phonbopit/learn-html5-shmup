@@ -33,12 +33,29 @@ BasicGame.Game.prototype = {
     this.player.body.collideWorldBounds = true;
 
     // after load enemy, now i can use it.
-    this.enemy = this.add.sprite(512, 300, 'greenEnemy');
+/*    this.enemy = this.add.sprite(512, 300, 'greenEnemy');
     this.enemy.animations.add('fly', [0, 1, 2], 20, true);
     this.enemy.play('fly');
     // Set default anchor to center the sprites.
     this.enemy.anchor.setTo(0.5, 0.5);
-    this.physics.enable(this.enemy, Phaser.Physics.ARCADE);
+    this.physics.enable(this.enemy, Phaser.Physics.ARCADE);*/
+    this.enemyPool = this.add.group();
+    this.enemyPool.enableBody = true;
+    this.enemyPool.physicsBodyType = Phaser.Physics.ARCADE;
+    this.enemyPool.createMultiple(50, 'greenEnemy');
+    this.enemyPool.setAll('anchor.x', 0.5);
+    this.enemyPool.setAll('anchor.y', 0.5);
+    this.enemyPool.setAll('outOfBoundsKill', true);
+    this.enemyPool.setAll('checkWorldBounds', true);
+
+    // Set animation
+    this.enemyPool.forEach(function(enemy) {
+      enemy.animations.add('fly', [0, 1, 2], 20, true);
+    });
+
+    this.nextEnemyAt = 0;
+    this.enemyDelay = 1000;
+
 
     // this.bullets = [];
 
@@ -90,11 +107,20 @@ BasicGame.Game.prototype = {
 
     this.physics.arcade.overlap(
       this.bulletPool,
-      this.enemy,
+      this.enemyPool,
       this.enemyHit,
       null,
       this
     );
+
+    // Random spawn
+    if (this.nextEnemyAt < this.time.now && this.enemyPool.countDead() > 0) {
+      this.nextEnemyAt = this.time.now + this.enemyDelay;
+      var enemy = this.enemyPool.getFirstExists(false);
+      enemy.reset(this.rnd.integerInRange(20, 1004), 0);
+      enemy.body.velocity.y = this.rnd.integerInRange(30, 60);
+      enemy.play('fly');
+    }
 
     this.player.body.velocity.x = 0;
     this.player.body.velocity.y = 0;
