@@ -8,18 +8,29 @@ BasicGame.Game.prototype = {
   preload: function() {
     this.load.image('sea', 'assets/sea.png');
     this.load.image('bullet', 'assets/bullet.png');
+
+    // Load enemy image.
+    this.load.spritesheet('greenEnemy', 'assets/enemy.png', 32, 32);
   },
 
   create: function () {
 
     this.sea = this.add.tileSprite(0, 0, 1024, 768, 'sea');
 
-    this.bullet = this.add.sprite(512, 400, 'bullet');
+    // after load enemy, now i can use it.
+    this.enemy = this.add.sprite(512, 300, 'greenEnemy');
+    this.enemy.animations.add('fly', [0, 1, 2], 20, true);
+    this.enemy.play('fly');
+    // Set default anchor to center the sprites.
+    this.enemy.anchor.setTo(0.5, 0.5);
 
+    this.bullet = this.add.sprite(512, 400, 'bullet');
+    this.bullet.anchor.setTo(0.5, 0.5);
   },
 
   update: function () {
-    //  Honestly, just about anything could go here. It's YOUR game after all. Eat your heart out!
+     this.sea.tilePosition.y += 0.2;
+     this.bullet.y -= 1;
   },
 
   quitGame: function (pointer) {
