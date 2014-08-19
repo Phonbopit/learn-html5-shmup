@@ -1,4 +1,3 @@
-
 BasicGame.Game = function (game) {
 
 };
@@ -61,7 +60,6 @@ BasicGame.Game.prototype = {
     // Kill a bullet when out of bound (over screen)
     this.bulletPool.setAll('outOfBoundsKill', true);
     this.bulletPool.setAll('checkWorldBounds', true);
-
 
     this.nextShotAt = 0;
     this.shotDelay = 200;
