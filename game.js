@@ -125,6 +125,7 @@ BasicGame.Game.prototype = {
     this.enemyPool.setAll('anchor.y', 0.5);
     this.enemyPool.setAll('outOfBoundsKill', true);
     this.enemyPool.setAll('checkWorldBounds', true);
+    this.enemyPool.setAll('reward', 100, false, false, 0, true);
 
     // Set animation
     this.enemyPool.forEach(function(enemy) {
@@ -183,6 +184,15 @@ BasicGame.Game.prototype = {
       });
     this.instructions.anchor.setTo(0.5, 0.5);
     this.instExpire = this.time.now + 10000;
+
+    this.score = 0;
+    this.scoreText = this.add.text(
+      510, 30, 'Score : ' + this.score, {
+        font: '20px monospace', 
+        fill: '#ffffff',
+        align: 'center'
+      });
+    this.scoreText.anchor.setTo(0.5, 0.5);
   },
 
   checkCollisions: function() {
@@ -282,10 +292,16 @@ BasicGame.Game.prototype = {
       enemy.play('hit');
     } else {
       this.explode(enemy);
+      this.addToScore(enemy.reward);
     }
   },
 
-  quitGame: function (pointer) {
+  addToScore: function(score) {
+    this.score += score;
+    this.scoreText.text = 'Score : ' + this.score;
+  },
+
+  quitGame: function(pointer) {
 
     //  Here you should destroy anything you no longer need.
     //  Stop music, delete sprites, purge caches, free resources, all that good stuff.
