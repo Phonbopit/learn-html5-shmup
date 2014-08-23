@@ -45,6 +45,8 @@ BasicGame.Game.prototype = {
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
+    this.setupPlayerIcons();
+
     this.setupText();
   },
 
@@ -109,7 +111,8 @@ BasicGame.Game.prototype = {
   setupPlayer: function() {
     this.player = this.add.sprite(160, 480, 'player');
     this.player.anchor.setTo(0.5, 0.5);
-    this.player.animations.add('fly', [0, 1, 2], 20, true);
+    this.player.animations.add('fly', [0, 1, 2], 10, true);
+    this.player.animations.add('ghost', [3, 0, 3, 1], 20, true);
     this.player.play('fly');
     this.physics.enable(this.player, Phaser.Physics.ARCADE);
     this.player.speed = 300;
@@ -176,6 +179,15 @@ BasicGame.Game.prototype = {
     });
   },
 
+  setupPlayerIcons: function() {
+    this.lives = this.add.group();
+    for (var i = 0; i < 3; i++) {
+      var life = this.lives.create(240 + (30 * i), 30, 'player');
+      life.scale.setTo(0.4, 0.4);
+      life.anchor.setTo(0.5, 0.5);
+    }
+  },
+
   setupText: function() {
     this.instructions = this.add.text(160, 400,
       'Use Arrow Keys to Move, Press Z to Fire\n' + 
@@ -183,7 +195,7 @@ BasicGame.Game.prototype = {
         font: '14px monospace', fill: '#fff', align: 'center'
       });
     this.instructions.anchor.setTo(0.5, 0.5);
-    this.instExpire = this.time.now + 10000;
+    this.instExpire = this.time.now + 5000;
 
     this.score = 0;
     this.scoreText = this.add.text(
@@ -217,7 +229,8 @@ BasicGame.Game.prototype = {
     if (this.nextEnemyAt < this.time.now && this.enemyPool.countDead() > 0) {
       this.nextEnemyAt = this.time.now + this.enemyDelay;
       var enemy = this.enemyPool.getFirstExists(false);
-      enemy.reset(this.rnd.integerInRange(20, 1004), 0, this.enemyInitialhealth);
+      // width = 320, enemy width = 32, center is 32 /2 = 16
+      enemy.reset(this.rnd.integerInRange(20, 304), 0, this.enemyInitialhealth);
       enemy.body.velocity.y = this.rnd.integerInRange(30, 60);
       enemy.play('fly');
     }
@@ -258,6 +271,11 @@ BasicGame.Game.prototype = {
     if (this.instructions.exists && this.time.now > this.instExpire) {
       this.instructions.destroy();
     }
+
+    if (this.ghostUntil && this.ghostUntil < this.time.now) {
+      this.ghostUntil = null;
+      this.player.play('fly');
+    }
   },
 
   explode: function(sprite) {
@@ -279,10 +297,21 @@ BasicGame.Game.prototype = {
   },
 
   playerHit: function(player, enemy) {
-    this.damageEnemy(enemy, 5);
 
-    this.explode(player);
-    player.kill();
+    if (this.ghostUntil && this.ghostUntil > this.time.now) {
+      return;
+    }
+
+    this.damageEnemy(enemy, 5);
+    var life = this.lives.getFirstAlive();
+    if (life) {
+      life.kill();
+      this.ghostUntil = this.time.now + 2000;
+      this.player.play('ghost');
+    } else {
+      this.explode(player);
+      player.kill();
+    }
   },
 
   damageEnemy: function(enemy, damage) {
