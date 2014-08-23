@@ -129,10 +129,15 @@ BasicGame.Game.prototype = {
     // Set animation
     this.enemyPool.forEach(function(enemy) {
       enemy.animations.add('fly', [0, 1, 2], 20, true);
+      enemy.animations.add('hit', [3, 1, 4, 2], 20, false);
+      enemy.events.onAnimationComplete.add(function(e) {
+        e.play('fly');
+      }, this);
     });
 
     this.nextEnemyAt = 0;
     this.enemyDelay = 1000;
+    this.enemyInitialhealth = 2;
   },
 
   setupBullets: function() {
@@ -202,7 +207,7 @@ BasicGame.Game.prototype = {
     if (this.nextEnemyAt < this.time.now && this.enemyPool.countDead() > 0) {
       this.nextEnemyAt = this.time.now + this.enemyDelay;
       var enemy = this.enemyPool.getFirstExists(false);
-      enemy.reset(this.rnd.integerInRange(20, 1004), 0);
+      enemy.reset(this.rnd.integerInRange(20, 1004), 0, this.enemyInitialhealth);
       enemy.body.velocity.y = this.rnd.integerInRange(30, 60);
       enemy.play('fly');
     }
@@ -260,18 +265,24 @@ BasicGame.Game.prototype = {
 
   enemyHit: function(bullet, enemy) {
     bullet.kill();
-
-    this.explode(enemy);
-
-    enemy.kill();
+    this.damageEnemy(enemy, 1);
   },
 
   playerHit: function(player, enemy) {
-    this.explode(enemy);
-    enemy.kill();
+    this.damageEnemy(enemy, 5);
 
     this.explode(player);
     player.kill();
+  },
+
+  damageEnemy: function(enemy, damage) {
+    // detail : http://docs.phaser.io/Phaser.Sprite.html#damage
+    enemy.damage(damage);
+    if (enemy.alive) {
+      enemy.play('hit');
+    } else {
+      this.explode(enemy);
+    }
   },
 
   quitGame: function (pointer) {
