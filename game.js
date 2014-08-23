@@ -113,6 +113,14 @@ BasicGame.Game.prototype = {
       this
     );
 
+    this.physics.arcade.overlap(
+      this.player,
+      this.enemyPool,
+      this.playerHit,
+      null,
+      this
+    );
+
     // Random spawn
     if (this.nextEnemyAt < this.time.now && this.enemyPool.countDead() > 0) {
       this.nextEnemyAt = this.time.now + this.enemyDelay;
@@ -163,7 +171,8 @@ BasicGame.Game.prototype = {
   },
 
   fire: function() {
-    if (this.nextShotAt > this.time.now) {
+    // player.alive is a Sprite.alive see http://docs.phaser.io/Phaser.Sprite.html
+    if (!this.player.alive || this.nextShotAt > this.time.now) {
       return;
     }
 
@@ -197,6 +206,17 @@ BasicGame.Game.prototype = {
     explosion.anchor.setTo(0.5, 0.5);
     explosion.animations.add('boom');
     explosion.play('boom', 15, false, true);
+  },
+
+  playerHit: function(player, enemy) {
+    enemy.kill();
+
+    var explosion = this.add.sprite(player.x, player.y, 'explosion');
+    explosion.anchor.setTo(0.5, 0.5);
+    explosion.animations.add('boom');
+    explosion.play('boom', 15, false, true);
+
+    player.kill();
   },
 
   quitGame: function (pointer) {
