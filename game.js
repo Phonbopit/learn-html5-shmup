@@ -79,7 +79,18 @@ BasicGame.Game.prototype = {
     this.bulletPool.setAll('checkWorldBounds', true);
 
     this.nextShotAt = 0;
-    this.shotDelay = 200;
+    this.shotDelay = 100;
+
+    this.explosionPool = this.add.group();
+    this.explosionPool.enableBody = true;
+    this.explosionPool.physicsBodyType = Phaser.Physics.ARCADE;
+    this.explosionPool.createMultiple(100, 'explosion');
+    this.explosionPool.setAll('anchor.x', 0.5);
+    this.explosionPool.setAll('anchor.y', 0.5);
+    // Set explosion Animation
+    this.explosionPool.forEach(function (explosion) {
+      explosion.animations.add('boom');
+    });
 
     this.cursors = this.input.keyboard.createCursorKeys();
 
@@ -168,6 +179,7 @@ BasicGame.Game.prototype = {
   render: function() {
 /*    this.game.debug.body(this.bullet);
     this.game.debug.body(this.enemy);*/
+    // this.game.debug.body(this.player);
   },
 
   fire: function() {
@@ -199,23 +211,32 @@ BasicGame.Game.prototype = {
     bullet.body.velocity.y = -200;
   },
 
+  explode: function(sprite) {
+    if (this.explosionPool.countDead() === 0) {
+      return;
+    }
+    var explosion = this.explosionPool.getFirstExists(false);
+    explosion.reset(sprite.x, sprite.y);
+    explosion.play('boom', 15, false, true);
+
+    // Add original sprite's velocity
+/*    explosion.body.velocity.x = sprite.body.velocity.x;
+    explosion.body.velocity.y = sprite.body.velocity.y;*/
+  },
+
   enemyHit: function(bullet, enemy) {
     bullet.kill();
+
+    this.explode(enemy);
+
     enemy.kill();
-    var explosion = this.add.sprite(enemy.x, enemy.y, 'explosion');
-    explosion.anchor.setTo(0.5, 0.5);
-    explosion.animations.add('boom');
-    explosion.play('boom', 15, false, true);
   },
 
   playerHit: function(player, enemy) {
+    this.explode(enemy);
     enemy.kill();
 
-    var explosion = this.add.sprite(player.x, player.y, 'explosion');
-    explosion.anchor.setTo(0.5, 0.5);
-    explosion.animations.add('boom');
-    explosion.play('boom', 15, false, true);
-
+    this.explode(player);
     player.kill();
   },
 
