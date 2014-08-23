@@ -21,7 +21,7 @@ BasicGame.Game.prototype = {
 
   create: function () {
 
-    this.sea = this.add.tileSprite(0, 0, 1024, 768, 'sea');
+    this.sea = this.add.tileSprite(0, 0, 320, 480, 'sea');
 
     this.setupPlayer();
 
@@ -107,7 +107,7 @@ BasicGame.Game.prototype = {
   },
 
   setupPlayer: function() {
-    this.player = this.add.sprite(400, 650, 'player');
+    this.player = this.add.sprite(160, 480, 'player');
     this.player.anchor.setTo(0.5, 0.5);
     this.player.animations.add('fly', [0, 1, 2], 20, true);
     this.player.play('fly');
@@ -177,17 +177,17 @@ BasicGame.Game.prototype = {
   },
 
   setupText: function() {
-    this.instructions = this.add.text(510, 600,
+    this.instructions = this.add.text(160, 400,
       'Use Arrow Keys to Move, Press Z to Fire\n' + 
       'Tapping/clicking does both', {
-        font: '20px monospace', fill: '#fff', align: 'center'
+        font: '14px monospace', fill: '#fff', align: 'center'
       });
     this.instructions.anchor.setTo(0.5, 0.5);
     this.instExpire = this.time.now + 10000;
 
     this.score = 0;
     this.scoreText = this.add.text(
-      510, 30, 'Score : ' + this.score, {
+      160, 30, 'Score : ' + this.score, {
         font: '20px monospace', 
         fill: '#ffffff',
         align: 'center'
