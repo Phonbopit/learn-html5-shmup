@@ -263,7 +263,12 @@ BasicGame.Game.prototype = {
 
     if (this.input.keyboard.isDown(Phaser.Keyboard.Z) ||
         this.input.activePointer.isDown) {
-      this.fire();
+      // this.fire();
+      if (this.returnText && this.returnText.exists) {
+        this.quitGame();
+      } else {
+        this.fire();
+      }
     }
   },
 
@@ -275,6 +280,18 @@ BasicGame.Game.prototype = {
     if (this.ghostUntil && this.ghostUntil < this.time.now) {
       this.ghostUntil = null;
       this.player.play('fly');
+    }
+
+    if (this.showReturn && this.time.now > this.showReturn) {
+      this.returnText = this.add.text(160, 320, 
+        'Press Z or Tap Game to go back to Main Menu', {
+          font: '16px serif',
+          fill: '#fff'
+        }
+      );
+
+      this.returnText.anchor.setTo(0.5, 0.5);
+      this.showReturn = false;
     }
   },
 
@@ -311,6 +328,7 @@ BasicGame.Game.prototype = {
     } else {
       this.explode(player);
       player.kill();
+      this.displayEnd(false);
     }
   },
 
@@ -328,12 +346,38 @@ BasicGame.Game.prototype = {
   addToScore: function(score) {
     this.score += score;
     this.scoreText.text = 'Score : ' + this.score;
+    if (this.score >= 10000) {
+      this.enemyPool.destroy();
+      this.playerEnd(true);
+    }
+  },
+
+  displayEnd: function(win) {
+    if (this.endText && this.endText.exists) {
+      return;
+    }
+
+    var message = win ? 'Yoo Win!!!' : 'Game Over!';
+    this.endText = this.add.text(160, 240, message, {
+      font: '48px serif', 
+      fill: '#f00'
+    });
+    this.endText.anchor.setTo(0.5, 0);
+    this.showReturn = this.time.now + 2000;
   },
 
   quitGame: function(pointer) {
 
     //  Here you should destroy anything you no longer need.
     //  Stop music, delete sprites, purge caches, free resources, all that good stuff.
+    this.sea.destroy();
+    this.player.destroy();
+    this.enemyPool.destroy();
+    this.bulletPool.destroy();
+    this.explosionPool.destroy();
+    this.instructions.destroy();
+    this.scoreText.destroy();
+    this.returnText.destroy();
 
     //  Then let's go back to the main menu.
     this.state.start('MainMenu');
