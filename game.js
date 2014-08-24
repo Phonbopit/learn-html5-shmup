@@ -235,7 +235,7 @@ BasicGame.Game.prototype = {
     this.bulletPool.setAll('checkWorldBounds', true);
 
     this.nextShotAt = 0;
-    this.shotDelay = 100;
+    this.shotDelay = 200;
   },
 
   setupExplosions: function() {
@@ -343,6 +343,8 @@ BasicGame.Game.prototype = {
   spawnEnemies: function() {
     if (this.nextEnemyAt < this.time.now && this.enemyPool.countDead() > 0) {
       this.nextEnemyAt = this.time.now + this.enemyDelay;
+
+      this.enemyDelay = this.rnd.integerInRange(300, 1000);
       var enemy = this.enemyPool.getFirstExists(false);
       // width = 320, enemy width = 32, center is 32 /2 = 16
       enemy.reset(this.rnd.integerInRange(20, 304), 0, this.enemyInitialhealth);
@@ -352,6 +354,9 @@ BasicGame.Game.prototype = {
 
     if (this.nextShooterAt < this.time.now && this.shooterPool.countDead() > 0) {
       this.nextShooterAt = this.time.now + this.shooterDelay;
+
+      this.shooterDelay = this.rnd.integerInRange(2000, 3000);
+      this.shooterShotDelay = this.rnd.integerInRange(200, 1000);
       var shooter = this.shooterPool.getFirstExists(false);
 
       // spawn at a random location at the top  
