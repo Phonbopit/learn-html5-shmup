@@ -357,6 +357,13 @@ BasicGame.Game.prototype = {
 
       this.shooterDelay = this.rnd.integerInRange(2000, 3000);
       this.shooterShotDelay = this.rnd.integerInRange(200, 1000);
+
+      // Increase difficult if weapon level max.
+      if (this.weaponLevel > 2) {
+        this.shooterDelay = this.rnd.integerInRange(500, 1000);
+        this.shooterShotDelay = this.rnd.integerInRange(200, 700);
+      }
+
       var shooter = this.shooterPool.getFirstExists(false);
 
       // spawn at a random location at the top  
