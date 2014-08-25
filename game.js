@@ -19,6 +19,9 @@ BasicGame.Game.prototype = {
     // Load white enemy
     this.load.spritesheet('whiteEnemy', 'assets/shooting-enemy.png', 32, 32);
 
+    // Load Boss
+    this.load.spritesheet('boss', 'assets/boss.png');
+
     // Load explosion
     this.load.spritesheet('explosion', 'assets/explosion.png', 32, 32);
 
@@ -160,14 +163,38 @@ BasicGame.Game.prototype = {
     this.enemyPool.setAll('checkWorldBounds', true);
     this.enemyPool.setAll('reward', 100, false, false, 0, true);
 
-    // 20% chance after enemy dead.
-    this.enemyPool.setAll('dropRate', 0.2, false, false, 0, true);
+    // 10% chance after enemy dead.
+    this.enemyPool.setAll('dropRate', 0.1, false, false, 0, true);
     
+    this.bossPool = this.add.group();
+    this.bossPool.enableBody = true;
+    this.bossPool.physicsBodyType = Phaser.Physics.ARCADE;
+    this.bossPool.createMultiple(1, 'boss');
+    this.bossPool.setAll('anchor.x', 0.5);
+    this.bossPool.setAll('anchor.y', 0.5);
+    this.bossPool.setAll('outOfBoundsKill', true);
+    this.bossPool.setAll('checkWorldBounds', true);
+    this.bossPool.setAll('reward', 10000, false, false, 0, true);
+    this.bossPool.setAll('dropRate', 0, false, false, 0, true);
+
+    // Set the animation for each sprite
+    this.bossPool.forEach(function (enemy) {
+      enemy.animations.add('fly', [ 0, 1], 10, true);
+      enemy.animations.add('hit', [ 3, 1, 3, 2 ], 20, false);
+      enemy.events.onAnimationComplete.add( function (e) {
+        e.play('fly');
+      }, this);
+    });
+
+    this.boss = this.bossPool.getTop();
+    this.bossApproaching = false;
+    this.bossInitialHealth = 500;
+
     // Set animation
     this.enemyPool.forEach(function(enemy) {
       enemy.animations.add('fly', [0, 1, 2], 20, true);
       enemy.animations.add('hit', [3, 1, 4, 2], 20, false);
-      enemy.events.onAnimationComplete.add(function(e) {
+      enemy.events.onAnimationComplete.add(function (e) {
         e.play('fly');
       }, this);
     });
@@ -186,8 +213,8 @@ BasicGame.Game.prototype = {
     this.shooterPool.setAll('checkWorldBounds', true);
     this.shooterPool.setAll('reward', 300, false, false, 0, true);
 
-    // 30% chance after enemyShooter die.
-    this.shooterPool.setAll('dropRate', 0.3, false, false, 0, true);
+    // 20% chance after enemyShooter die.
+    this.shooterPool.setAll('dropRate', 0.2, false, false, 0, true);
     // Set the animation for each sprite
     this.shooterPool.forEach(function (enemy) {
       enemy.animations.add('fly', [ 0, 1, 2 ], 20, true);
@@ -338,6 +365,24 @@ BasicGame.Game.prototype = {
       null,
       this
     );
+
+    if (this.bossApproaching === false) {
+      this.physics.arcade.overlap(
+        this.bulletPool, 
+        this.bossPool, 
+        this.enemyHit, 
+        null, 
+        this
+      );
+
+      this.physics.arcade.overlap(
+        this.player, 
+        this.bossPool, 
+        this.playerHit, 
+        null, 
+        this
+      );
+    }
   },
 
   spawnEnemies: function() {
@@ -393,6 +438,35 @@ BasicGame.Game.prototype = {
         enemy.nextShotAt = this.time.now + this.shooterShotDelay;
       }
     }, this);
+
+    if (this.bossApproaching === false && this.boss.alive && 
+        this.boss.nextShotAt < this.time.now &&
+        this.enemyBulletPool.countDead() > 9) {
+
+      this.boss.nextShotAt = this.time.now + 1000;
+
+      for (var i = 0; i < 5; i++) {
+        // process 2 bullets at a time
+        var leftBullet = this.enemyBulletPool.getFirstExists(false);
+        leftBullet.reset(this.boss.x - 10 - i * 10, this.boss.y + 20);
+        var rightBullet = this.enemyBulletPool.getFirstExists(false);
+        rightBullet.reset(this.boss.x + 10 + i * 10, this.boss.y + 20);
+
+        if (this.boss.health > 250) {
+          // aim directly at the player
+          this.physics.arcade.moveToObject(leftBullet, this.player, 150);
+          this.physics.arcade.moveToObject(rightBullet, this.player, 150);
+        } else {
+          // aim slightly off center of the player
+          this.physics.arcade.moveToXY(
+            leftBullet, this.player.x - i * 100, this.player.y, 150
+          );
+          this.physics.arcade.moveToXY(
+            rightBullet, this.player.x + i * 100, this.player.y, 150
+          );
+        }
+      }
+    }
   },
 
   detectPlayerInput: function() {
@@ -452,6 +526,18 @@ BasicGame.Game.prototype = {
       this.returnText.anchor.setTo(0.5, 0.5);
       this.showReturn = false;
     }
+
+    if (this.bossApproaching && this.boss.y > 80) {
+      this.bossApproaching = false;
+      this.boss.health = 500;
+      this.boss.nextShotAt = 0;
+
+      this.boss.body.velocity.y = 0;
+      this.boss.body.velocity.x = 200;
+      // allow bouncing off world bounds
+      this.boss.body.bounce.x = 1;
+      this.boss.body.collideWorldBounds = true;
+    }
   },
 
   explode: function(sprite) {
@@ -509,6 +595,14 @@ BasicGame.Game.prototype = {
       this.explode(enemy);
       this.spawnPowerUp(enemy);
       this.addToScore(enemy.reward);
+
+      if (enemy.key === 'boss') {
+        this.enemyPool.destroy();
+        this.shooterPool.destroy();
+        this.bossPool.destroy();
+        this.enemyBulletPool.destroy();
+        this.displayEnd(true);
+      }
     }
   },
 
@@ -524,15 +618,25 @@ BasicGame.Game.prototype = {
      }
   },
 
+  spawnBoss: function() {
+    this.bossApproaching = true;
+    var boss = this.bossPool.getFirstExists(false);
+    this.physics.enable(boss, Phaser.Physics.ARCADE);
+    boss.reset(160, 0, this.bossInitialHealth);
+    boss.body.velocity.y = 15;
+    boss.play('fly');
+  },
+
   addToScore: function(score) {
     this.score += score;
     this.scoreText.text = 'Score : ' + this.score;
-    if (this.score >= 20000) {
-      this.enemyPool.destroy();
+    if (this.score >= 200 && this.bossPool.countDead() == 1) {
+/*      this.enemyPool.destroy();
       this.shooterPool.destroy();
       this.enemyBulletPool.destroy();
 
-      this.displayEnd(true);
+      this.displayEnd(true);*/
+      this.spawnBoss();
     }
   },
 
