@@ -20,7 +20,7 @@ BasicGame.Game.prototype = {
     this.load.spritesheet('whiteEnemy', 'assets/shooting-enemy.png', 32, 32);
 
     // Load Boss
-    this.load.spritesheet('boss', 'assets/boss.png');
+    this.load.spritesheet('boss', 'assets/boss.png', 93, 75);
 
     // Load explosion
     this.load.spritesheet('explosion', 'assets/explosion.png', 32, 32);
@@ -179,7 +179,7 @@ BasicGame.Game.prototype = {
 
     // Set the animation for each sprite
     this.bossPool.forEach(function (enemy) {
-      enemy.animations.add('fly', [ 0, 1], 10, true);
+      enemy.animations.add('fly', [ 0, 1, 2], 20, true);
       enemy.animations.add('hit', [ 3, 1, 3, 2 ], 20, false);
       enemy.events.onAnimationComplete.add( function (e) {
         e.play('fly');
@@ -625,12 +625,15 @@ BasicGame.Game.prototype = {
     boss.reset(160, 0, this.bossInitialHealth);
     boss.body.velocity.y = 15;
     boss.play('fly');
+
+    this.enemyPool.destroy();
+    // this.shooterPool.destroy();
   },
 
   addToScore: function(score) {
     this.score += score;
     this.scoreText.text = 'Score : ' + this.score;
-    if (this.score >= 200 && this.bossPool.countDead() == 1) {
+    if (this.score >= 20000 && this.bossPool.countDead() == 1) {
 /*      this.enemyPool.destroy();
       this.shooterPool.destroy();
       this.enemyBulletPool.destroy();
