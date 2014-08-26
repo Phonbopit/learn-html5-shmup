@@ -1,5 +1,4 @@
 BasicGame.Game = function (game) {
-
 };
 
 BasicGame.Game.prototype = {
@@ -7,7 +6,6 @@ BasicGame.Game.prototype = {
   preload: function() {
     this.load.image('sea', 'assets/sea.png');
     this.load.image('bullet', 'assets/bullet.png');
-
     this.load.image('enemyBullet', 'assets/enemy-bullet.png');
 
     // Load PowerUp
@@ -36,19 +34,7 @@ BasicGame.Game.prototype = {
 
     this.setupPlayer();
 
-    // after load enemy, now i can use it.
-/*    this.enemy = this.add.sprite(512, 300, 'greenEnemy');
-    this.enemy.animations.add('fly', [0, 1, 2], 20, true);
-    this.enemy.play('fly');
-    // Set default anchor to center the sprites.
-    this.enemy.anchor.setTo(0.5, 0.5);
-    this.physics.enable(this.enemy, Phaser.Physics.ARCADE);*/
-
     this.setupEnemies();
-
-    // this.bullets = [];
-
-    // User Phaser.Group
 
     this.setupBullets();
 
@@ -64,16 +50,6 @@ BasicGame.Game.prototype = {
   update: function () {
     this.sea.tilePosition.y += 0.2;
 
-/*    for (var i = 0; i < this.bullets.length; i++) {
-      this.physics.arcade.overlap(
-        this.bullets[i],
-        this.enemy,
-        this.enemyHit,
-        null,
-        this
-      );
-    }*/
-
     this.checkCollisions();
 
     // Random spawn
@@ -83,12 +59,6 @@ BasicGame.Game.prototype = {
     this.detectPlayerInput();
 
     this.delayEffect();
-  },
-
-  render: function() {
-/*    this.game.debug.body(this.bullet);
-    this.game.debug.body(this.enemy);*/
-    // this.game.debug.body(this.player);
   },
 
   fire: function() {
@@ -547,10 +517,6 @@ BasicGame.Game.prototype = {
     var explosion = this.explosionPool.getFirstExists(false);
     explosion.reset(sprite.x, sprite.y);
     explosion.play('boom', 15, false, true);
-
-    // Add original sprite's velocity
-/*    explosion.body.velocity.x = sprite.body.velocity.x;
-    explosion.body.velocity.y = sprite.body.velocity.y;*/
   },
 
   enemyHit: function(bullet, enemy) {
@@ -672,7 +638,5 @@ BasicGame.Game.prototype = {
 
     //  Then let's go back to the main menu.
     this.state.start('MainMenu');
-
   }
-
 };
